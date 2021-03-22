@@ -1,8 +1,8 @@
-from branch import Branch
-import branch
-from repository import Repository
+from .branch import Branch
+from .repository import Repository
 from typing import List
 
+"""
 def analyze_merges(local_dir:str, remote_path:str , base_path: str, main_branch: str):
     repo = Repository(local_dir, remote_path)
     branches = branch.get_all_branches(repo)
@@ -16,5 +16,4 @@ def analyze_merges(local_dir:str, remote_path:str , base_path: str, main_branch:
             else:
                 results.append(f'{name} Missing')
     return results
-
-
+"""
