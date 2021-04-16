@@ -7,10 +7,11 @@ from sqlalchemy import (
 
 from .meta import Base
 
-class Branch(Base):
-    __tablename__ = 'branch'
+class Repo(Base):
+    __tablename__ = 'repo'
     id = Column(Integer, primary_key=True)
     name = Column(Text)
-
-    repo_id = Column(ForeignKey('repo.id'), nullable=False)
-    repo = relationship('Repo')
+    remote_path = Column(Text)
+    local_path = Column(Text)
+    username = Column(Text)
+    token = Column(Text)
