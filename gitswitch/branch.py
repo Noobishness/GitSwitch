@@ -1,7 +1,7 @@
 from typing import Dict, List
+from git import Commit, GitCommandError
 
 from .repository import Repository
-
 
 class Branch:
     def __init__(self, repo: Repository, name: str):
@@ -28,7 +28,7 @@ class Branch:
     def is_remote(self) -> bool:
         return self.remote_branch is not None
 
-    def get_commit(self):
+    def get_commit(self) -> Commit:
         try:
             if self.is_remote():
                 return self.remote_branch.commit
@@ -50,14 +50,15 @@ class Branch:
     def get_merge_base(self, source_branch: 'Branch') -> str:
         return self.repo.get_merge_base(self.get_commit().hexsha, source_branch.get_commit().hexsha)
 
-def get_all_branches(repo: Repository) -> Dict[str, Branch]:
-    branches = dict()
-    if repo.has_remote():
-        for remote in repo.remote_branches:
-            name = remote.name[len('origin/'):]
-            if name != 'HEAD':
-                branches[name] = Branch(repo, name)
-    for local in repo.local_branches:
-        if not local.name in branches:
-            branches[local.name] = Branch(repo, local.name)
-    return branches
+    def merge_into(self, target_branch: 'Branch') -> bool:
+        target_branch.activate()
+        base = self.repo.repo.merge_base(target_branch, self.name)
+        try:
+            self.repo.repo.index.merge_tree(target_branch.name, base=base)
+        except GitCommandError:
+            return False
+        self.repo.repo.index.commit(f'Merge {self.name} into {target_branch.name}', parent_commits=(target_branch.get_commit(), self.get_commit()))
+        self.repo.actualize()
+        return True
+
+    

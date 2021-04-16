@@ -1,7 +1,5 @@
 import typing
 
-from git import GitCommandError
-
 from .branch import Branch
 from .repository import Repository
 
@@ -38,14 +36,7 @@ class MergeForwardRule:
             return self.try_merge_direct()
 
     def try_merge_direct(self) -> bool:
-        self.to_branch.activate()
-        base = self.repo.repo.merge_base(self.to_branch.name, self.from_branch.name)
-        try:
-            self.repo.repo.index.merge_tree(self.to_branch.name, base=base)
-        except GitCommandError:
-            return False
-        self.repo.repo.index.commit('Merge main into feature', parent_commits=(self.to_branch.get_commit().commit, self.from_branch.get_commit().commit))
-        return True
+        return self.from_branch.merge_into(self.to_branch)
     
     def try_merge_indirect(self) -> bool:
         success = True
@@ -57,14 +48,7 @@ class MergeForwardRule:
     def try_repair(self) -> bool:
         if not self.is_broken():
             return True
-        self.from_branch.activate()
-        base = self.repo.repo.merge_base(self.to_branch.name, self.from_branch.name)
-        try:
-            self.repo.repo.index.merge_tree(self.from_branch.name, base=base)
-        except GitCommandError:
-            return False
-        self.repo.repo.index.commit(f'Reverse merge {self.to_branch.name} into {self.from_branch.name}', parent_commits=(self.to_branch.get_commit(), self.from_branch.get_commit()))
-        return True
+        return self.to_branch.merge_into(self.from_branch)
 
     def sync(self) -> bool:
         if self.autorepair:

@@ -1,12 +1,15 @@
 from git import Repo, InvalidGitRepositoryError, GitCommandError
 import os
 from os import path
+from .branch import Branch
+from typing import Dict
 
 class Repository:
     def __init__(self, local_dir: str, remote_url: str, no_actualize: bool):
         assert local_dir, "local dir is empty"
         self.local_dir = local_dir
         self.remote_url = remote_url
+        self.initiated = False
         if not no_actualize:
             self.actualize()
 
@@ -47,9 +50,13 @@ class Repository:
     def init(self):
         if not path.exists(self.local_dir):
             os.makedirs(self.local_dir)
-        self.repo = Repo.init(self.local_dir)
-        self.write_and_commit('readme.md','init','init')
-        self.local_branches = self.repo.heads
+        if not self.initiated:
+            self.repo = Repo.init(self.local_dir)
+            self.write_and_commit('readme.md','init','init')
+            self.initiated = True
+
+    def create_branch(self, branch: str, commit_sha: str):
+        self.repo.create_head(branch, commit_sha)
 
     def write_and_commit(self, file_name: str, commit: str, content: str):
         f = open(self.local_dir / file_name, "a")
